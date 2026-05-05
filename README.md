@@ -2,6 +2,7 @@
 **Nguyen Phuong Linh - 11247186**
 
 ---
+This project is a Hotel Management System designed to simplify and automate daily hotel operations such as room booking, guest management, and billing. The system provides an intuitive interface and integrates a database to ensure efficient data handling and improved service quality. It is suitable for learning purposes as well as small-scale hotel management applications.
 
 ## 📁 Project Structure
 
