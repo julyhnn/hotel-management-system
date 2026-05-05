@@ -1,6 +1,6 @@
 """
 main.py - Hotel Management System GUI
-Santorini Resort Theme | DATCOM Lab | NEU
+Santorini Resort Theme | Nguyen Phuong Linh | 11247186
 Run: python main.py
 """
 
