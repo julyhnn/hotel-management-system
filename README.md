@@ -1,5 +1,5 @@
 # 🏨 Hotel Management System — Project 11
-**DATCOM Lab | NEU — College of Technology**
+**Nguyen Phuong Linh - 11247186**
 
 ---
 
