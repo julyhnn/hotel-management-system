@@ -76,6 +76,7 @@ python main.py
 | Procedure | sp_MakeBooking | Create a booking |
 | Function | fn_BookingCost | Calculate total cost |
 | Function | fn_ApplyDiscount | Apply stay discounts |
+| Function | fn_OccupancyRate | Caculate room occupancy rate |
 | Trigger | trg_AfterBookingUpdate | Auto-update room status |
 | User | receptionist | Limited access |
 | User | manager | Full access |
