@@ -1,6 +1,6 @@
 """
 database.py - Database connection and ORM-style helpers
-Hotel Management System | DATCOM Lab | NEU
+Hotel Management System | Nguyen Phuong Linh | 11247186
 """
 
 import mysql.connector
@@ -13,18 +13,16 @@ DB_CONFIG = {
     "host":     "localhost",
     "port":     3306,
     "database": "hotel_management",
-    "user":     "root",         # Change to your MySQL user
-    "password": "02667986",             # Change to your MySQL password
+    "user":     "root",             # Change to your MySQL user
+    "password": "your_password",    # Change to your MySQL password
     "charset":  "utf8mb4",
     "autocommit": False,
     "connection_timeout": 10,
 }
 
-
 def get_connection():
     """Return a new MySQL connection (caller must close it)."""
     return mysql.connector.connect(**DB_CONFIG)
-
 
 @contextmanager
 def db_cursor(commit: bool = False):
@@ -41,7 +39,6 @@ def db_cursor(commit: bool = False):
     finally:
         cur.close()
         conn.close()
-
 
 # ─── GUEST helpers ────────────────────────────────────────────────────────────
 
@@ -79,7 +76,6 @@ def update_guest(guest_id, name, phone, email, address, id_number, nationality):
 def delete_guest(guest_id):
     with db_cursor(commit=True) as (_, cur):
         cur.execute("DELETE FROM Guests WHERE GuestID=%s", (guest_id,))
-
 
 # ─── ROOM helpers ─────────────────────────────────────────────────────────────
 
@@ -122,7 +118,6 @@ def add_room(room_number, room_type, floor, price, max_occ, description):
             (room_number, room_type, floor, price, max_occ, description)
         )
         return cur.lastrowid
-
 
 # ─── BOOKING helpers ──────────────────────────────────────────────────────────
 
@@ -219,7 +214,6 @@ def get_booking_services(booking_id):
         """, (booking_id,))
         return cur.fetchall()
 
-
 # ─── INVOICE helpers ──────────────────────────────────────────────────────────
 
 def get_all_invoices():
@@ -255,7 +249,6 @@ def get_invoice(booking_id):
             WHERE i.BookingID=%s
         """, (booking_id,))
         return cur.fetchone()
-
 
 # ─── REPORTING ────────────────────────────────────────────────────────────────
 
