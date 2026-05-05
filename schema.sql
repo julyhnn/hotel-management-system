@@ -1,6 +1,5 @@
 -- ============================================================
 -- HOTEL MANAGEMENT SYSTEM - DATABASE SCHEMA
--- Project 11 | DATCOM Lab | NEU
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS hotel_management 
