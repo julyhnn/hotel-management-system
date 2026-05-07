@@ -3,7 +3,7 @@ main.py - Hotel Management System GUI
 Santorini Resort Theme | Nguyen Phuong Linh | 11247186
 Run: python main.py
 """
-
+import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from datetime import date, timedelta
@@ -18,27 +18,162 @@ except ImportError:
 
 # ─── Color Palette (Santorini-inspired) ───────────────────────────────────────
 C = {
-    "bg":        "#0F1C2E",   # Deep navy
-    "sidebar":   "#0A1628",   # Darker sidebar
-    "card":      "#162033",   # Card background
-    "accent":    "#C9A96E",   # Gold accent
-    "accent2":   "#4A90D9",   # Aegean blue
-    "white":     "#F0EDE8",   # Warm white
-    "muted":     "#8899AA",   # Muted text
-    "success":   "#4CAF7D",   # Green
-    "warning":   "#E8A44A",   # Orange
-    "danger":    "#E85454",   # Red
-    "border":    "#1E2F45",   # Border color
-    "hover":     "#1E3050",   # Hover state
-    "input_bg":  "#1A2840",   # Input background
+    "bg":        "#FFFFFF",   # Deep navy
+    "sidebar":   "#a3b18a",   # Darker sidebar
+    "card":      "#fffdfe",   # Card background
+    "accent":    "#344e41",   # Gold accent
+    "accent2":   "#588157",   # Aegean blue
+    "white":     "#393838",   # Warm white
+    "muted":     "#3F3D3D",   # Muted text
+    "success":   "#344e41",   # Green
+    "warning":   "#588157",   # Orange
+    "danger":    "#899d66",   # Red
+    "border":    "#899d66",   # Border color
+    "hover":     "#808c6c",   # Hover state
+    "input_bg":  "#a3b18a",   # Input background
 }
 
-FONT_TITLE  = ("Georgia", 22, "bold")
-FONT_HEAD   = ("Georgia", 13, "bold")
-FONT_LABEL  = ("Georgia", 10)
-FONT_BOLD   = ("Georgia", 10, "bold")
-FONT_SMALL  = ("Georgia", 9)
-FONT_MONO   = ("American Typewriter", 10)
+FONT_TITLE  = ("Garamond", 23, "bold")
+FONT_HEAD   = ("Garamond", 16, "bold")
+FONT_LABEL  = ("Sans-Serif", 10)
+FONT_BOLD   = ("Sans-Serif", 10, "bold")
+FONT_SMALL  = ("Sans-Serif", 9)
+FONT_MONO   = ("Sans-Serif", 10)
+
+# ─── User Roles Config ────────────────────────────────────────────────────────
+USERS = {
+    "manager": {
+        "password": "M@nager2024!",
+        "display":  "Manager",
+        "icon":     "",
+        "color":    "#344e41",
+        "pages":    ["dashboard","guests","rooms","bookings","services","invoices","reports"],
+    },
+    "receptionist": {
+        "password": "Recept!on2024",
+        "display":  "Receptionist",
+        "icon":     "",
+        "color":    "#588157",
+        "pages":    ["dashboard","guests","rooms","bookings","services"],
+    },
+    "accountant": {
+        "password": "Acc0unt!2024",
+        "display":  "Accountant",
+        "icon":     "",
+        "color":    "#899d66",
+        "pages":    ["dashboard","invoices","reports"],
+    },
+}
+ 
+CURRENT_USER = {"role": None, "display": None, "icon": None, "color": None, "pages": []}
+
+
+# ─── Login Window ─────────────────────────────────────────────────────────────
+
+class LoginWindow(ctk.CTkToplevel):
+    """Popup đăng nhập — dùng cho lần đầu và khi đổi user."""
+
+    def __init__(self, parent, on_success, title_text="Đăng nhập hệ thống"):
+        super().__init__(parent)
+        self.on_success = on_success
+        self.title("Santorini Resort — Login")
+        self.geometry("400x480")
+        self.resizable(False, False)
+        self.configure(fg_color=C["bg"])
+        self.grab_set()           # modal
+        self.lift()
+        self._build(title_text)
+
+    def _build(self, title_text):
+        # Header
+        hdr = ctk.CTkFrame(self, fg_color=C["sidebar"], corner_radius=0, height=90)
+        hdr.pack(fill="x")
+        hdr.pack_propagate(False)
+        ctk.CTkLabel(hdr, text="⚓  SANTORINI RESORT",
+                     font=("Garamond", 18, "bold"),
+                     text_color=C["accent"]).pack(pady=(18, 2))
+        ctk.CTkLabel(hdr, text=title_text,
+                     font=FONT_SMALL,
+                     text_color=C["muted"]).pack()
+
+        # Card
+        card = ctk.CTkFrame(self, fg_color=C["card"],
+                             corner_radius=14, border_width=1,
+                             border_color=C["border"])
+        card.pack(padx=32, pady=24, fill="both", expand=True)
+
+        ctk.CTkLabel(card, text="Choose Your Role",
+                     font=FONT_HEAD, text_color=C["accent"]).pack(pady=(20, 4))
+
+        # Role selector
+        self._role_var = ctk.StringVar(value="manager")
+        role_frame = ctk.CTkFrame(card, fg_color="transparent")
+        role_frame.pack(pady=8)
+        for role, info in USERS.items():
+            ctk.CTkRadioButton(role_frame,
+                               text=f"{info['icon']}  {info['display']}",
+                               variable=self._role_var,
+                               value=role,
+                               font=FONT_LABEL,
+                               text_color=C["white"],
+                               fg_color=C["accent"],
+                               hover_color=C["hover"]).pack(anchor="w", pady=4, padx=16)
+
+        # Password
+        ctk.CTkLabel(card, text="Enter Password",
+                     font=FONT_BOLD, text_color=C["muted"]).pack(anchor="w", padx=20)
+        self._pw_var = ctk.StringVar()
+        pw_entry = ctk.CTkEntry(card,
+                                textvariable=self._pw_var,
+                                show="●",
+                                width=280,
+                                fg_color=C["input_bg"],
+                                border_color=C["border"],
+                                text_color=C["white"],
+                                corner_radius=8)
+        pw_entry.pack(pady=(4, 8))
+        pw_entry.bind("<Return>", lambda e: self._login())
+
+        # Error label
+        self._err = ctk.CTkLabel(card, text="", font=FONT_SMALL,
+                                  text_color="#c0392b")
+        self._err.pack()
+
+        # Login button
+        ctk.CTkButton(card, text="Login",
+                      command=self._login,
+                      fg_color=C["accent"],
+                      hover_color=C["hover"],
+                      text_color="#dad7cd",
+                      corner_radius=10,
+                      width=280,
+                      height=40,
+                      font=FONT_BOLD).pack(pady=(4, 20))
+
+    def _login(self):
+        role = self._role_var.get()
+        pw   = self._pw_var.get()
+        if USERS[role]["password"] == pw:
+            # Cập nhật CURRENT_USER
+            CURRENT_USER["role"]    = role
+            CURRENT_USER["display"] = USERS[role]["display"]
+            CURRENT_USER["icon"]    = USERS[role]["icon"]
+            CURRENT_USER["color"]   = USERS[role]["color"]
+            CURRENT_USER["pages"]   = USERS[role]["pages"]
+
+            # Reconnect DB với đúng user nếu có
+            if DB_AVAILABLE:
+                try:
+                    db.reconnect(role, pw)
+                except Exception:
+                    pass  # database.py chưa có hàm reconnect thì bỏ qua
+
+            self.destroy()
+            self.on_success()
+        else:
+            self._err.configure(text="Wrong password, try again!")
+            self._pw_var.set("")
+
 
 # ─── Fake data fallback ───────────────────────────────────────────────────────
 DEMO_GUESTS = [
@@ -96,30 +231,47 @@ def make_label(parent, text, font=FONT_LABEL, fg=None, **kw):
                     bg=kw.pop("bg", C["card"]), **kw)
 
 def make_entry(parent, textvariable=None, width=28, **kw):
-    e = tk.Entry(parent, textvariable=textvariable, width=width,
-                 bg=C["input_bg"], fg=C["white"], insertbackground=C["accent"],
-                 relief="flat", font=FONT_LABEL, bd=6,
-                 highlightthickness=1, highlightbackground=C["border"],
-                 highlightcolor=C["accent"], **kw)
+    # Remove tk.Entry-only kwargs that CTkEntry doesn't support
+    kw.pop("highlightthickness", None)
+    kw.pop("highlightbackground", None)
+    kw.pop("highlightcolor", None)
+    kw.pop("insertbackground", None)
+    kw.pop("relief", None)
+    kw.pop("bd", None)
+    # Convert width from character units to pixels (approx 8px per char)
+    px_width = width * 8
+    e = ctk.CTkEntry(parent,
+                     textvariable=textvariable,
+                     width=px_width,
+                     fg_color=C["input_bg"],
+                     text_color=C["white"],
+                     border_color=C["border"],
+                     border_width=1,
+                     corner_radius=8,
+                     font=FONT_LABEL,
+                     **kw)
     return e
 
 def make_button(parent, text, command=None, style="primary", **kw):
     colors = {
-        "primary": (C["accent"],   "#0A1628"),
+        "primary": (C["accent"],   "#acb69b"),
         "blue":    (C["accent2"],  C["white"]),
         "danger":  (C["danger"],   C["white"]),
-        "ghost":   ("#1E3A5F",     C["white"]),
-        "success": (C["success"],  "#0A1628"),
+        "ghost":   ("#899d66",     C["white"]),
+        "success": (C["success"],  "#dad7cd"),
     }
     bg, fg = colors.get(style, colors["primary"])
-    btn = tk.Label(parent, text=text,
-                   bg=bg, fg=fg, font=FONT_BOLD,
-                   cursor="hand2", padx=16, pady=8,
-                   relief="flat", **kw)
-    if command:
-        btn.bind("<Button-1>", lambda e: command())
-    btn.bind("<Enter>", lambda e: btn.config(bg=_lighten(bg)))
-    btn.bind("<Leave>", lambda e: btn.config(bg=bg))
+    # Remove tk.Label-specific kwargs
+    kw.pop("padx", None)
+    kw.pop("pady", None)
+    btn = ctk.CTkButton(parent, text=text,
+                        command=command,
+                        fg_color=bg,
+                        hover_color=_lighten(bg),
+                        text_color=fg,
+                        font=FONT_BOLD,
+                        corner_radius=8,
+                        **kw)
     return btn
 
 def _lighten(hex_color):
@@ -135,12 +287,12 @@ def _lighten(hex_color):
         return hex_color
 
 def make_separator(parent, bg=None):
-    return tk.Frame(parent, height=1, bg=bg or C["border"])
+    return ctk.CTkFrame(parent, height=1, fg_color=bg or C["border"])
 
 def scrolled_frame(parent):
     """Returns (outer_frame, inner_frame) with scroll."""
     canvas = tk.Canvas(parent, bg=C["card"], highlightthickness=0, bd=0)
-    scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+    scrollbar = ctk.CTkScrollbar(parent, orientation="vertical", command=canvas.yview)
     inner = tk.Frame(canvas, bg=C["card"])
     inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
     canvas.create_window((0,0), window=inner, anchor="nw")
@@ -164,90 +316,129 @@ class HotelApp(tk.Tk):
         self.configure(bg=C["bg"])
         self._current_page = None
         self._build_ui()
-        self.navigate("dashboard")
+        # Hiện login trước khi cho vào app
+        self.after(100, self._show_login)
+
+    def _show_login(self, switch=False):
+        title = "Change User" if switch else "Login to Your Account"
+        LoginWindow(self, self._on_login_success, title_text=title)
+
+    def _on_login_success(self):
+        """Sau khi đăng nhập thành công: cập nhật UI."""
+        # Cập nhật nhãn user trên topbar
+        self._user_label.configure(
+            text=f"{CURRENT_USER['icon']}  {CURRENT_USER['display']}"
+        )
+        # Rebuild sidebar theo quyền
+        for w in self.sidebar.winfo_children():
+            w.destroy()
+        self._build_sidebar()
+        self.navigate(CURRENT_USER["pages"][0])
 
     # ── Layout ────────────────────────────────────────────────────────────────
     def _build_ui(self):
         # Top bar
-        topbar = tk.Frame(self, bg=C["sidebar"], height=52)
+        topbar = ctk.CTkFrame(self, fg_color=C["sidebar"], corner_radius=0, height=52)
         topbar.pack(fill="x", side="top")
         topbar.pack_propagate(False)
 
-        tk.Label(topbar, text="⚓  SANTORINI RESORT", font=("Georgia",14,"bold"),
-                 fg=C["accent"], bg=C["sidebar"]).pack(side="left", padx=20, pady=12)
-        tk.Label(topbar, text="Hotel Management System", font=("Georgia",10),
+        tk.Label(topbar, text="⚓  SANTORINI RESORT", font=("Garamond",20,"bold"),
+                 fg=C["accent"], bg=C["sidebar"]).pack(side="left", padx=18, pady=12)
+        tk.Label(topbar, text="Hotel Management System", font=("Garamond",12),
                  fg=C["muted"], bg=C["sidebar"]).pack(side="left", padx=4, pady=12)
 
-        # Right: status
+        # Right: status + user info
         self._db_label = tk.Label(topbar, text="● LIVE DB" if DB_AVAILABLE else "● DEMO MODE",
                                   font=FONT_SMALL,
                                   fg=C["success"] if DB_AVAILABLE else C["warning"],
                                   bg=C["sidebar"])
         self._db_label.pack(side="right", padx=20)
 
-        today_lbl = tk.Label(topbar, text=f"📅  {date.today().strftime('%d %b %Y')}",
+        today_lbl = tk.Label(topbar, text=f"{date.today().strftime('%d %b %Y')}",
                              font=FONT_SMALL, fg=C["muted"], bg=C["sidebar"])
         today_lbl.pack(side="right", padx=16)
 
+        # Nút đổi user
+        ctk.CTkButton(topbar, text="Change User",
+                      command=lambda: self._show_login(switch=True),
+                      fg_color=C["accent"],
+                      hover_color=C["hover"],
+                      text_color="#dad7cd",
+                      corner_radius=8,
+                      height=30,
+                      font=FONT_SMALL).pack(side="right", padx=8, pady=10)
+
+        # Hiển thị user đang đăng nhập
+        self._user_label = tk.Label(topbar, text="Not logged in",
+                                    font=FONT_BOLD, fg=C["accent"], bg=C["sidebar"])
+        self._user_label.pack(side="right", padx=8)
+
         # Sidebar + content
-        body = tk.Frame(self, bg=C["bg"])
+        body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
         body.pack(fill="both", expand=True)
 
-        self.sidebar = tk.Frame(body, bg=C["sidebar"], width=210)
+        self.sidebar = ctk.CTkFrame(body, fg_color=C["sidebar"], corner_radius=0, width=210)
         self.sidebar.pack(fill="y", side="left")
         self.sidebar.pack_propagate(False)
 
-        self.content = tk.Frame(body, bg=C["bg"])
+        self.content = ctk.CTkFrame(body, fg_color=C["bg"], corner_radius=0)
         self.content.pack(fill="both", expand=True, side="left")
 
         self._build_sidebar()
 
     def _build_sidebar(self):
         # Logo area
-        logo_area = tk.Frame(self.sidebar, bg=C["sidebar"], pady=20)
-        logo_area.pack(fill="x")
-        tk.Label(logo_area, text="☰  NAVIGATION", font=("American Typewriter",9,"bold"),
+        logo_area = ctk.CTkFrame(self.sidebar, fg_color=C["sidebar"], corner_radius=0)
+        logo_area.pack(fill="x", pady=20)
+
+        role_display = CURRENT_USER.get("display", "")
+        role_icon    = CURRENT_USER.get("icon", "☰")
+        tk.Label(logo_area, text=f"{role_icon}  {role_display}" if role_display else "☰  NAVIGATION",
+                 font=("Garamond", 11, "bold"),
                  fg=C["muted"], bg=C["sidebar"]).pack(anchor="w", padx=20)
 
         make_separator(self.sidebar).pack(fill="x", padx=12)
 
-        nav_items = [
-            ("dashboard",   "🏠",  "Dashboard"),
-            ("guests",      "👥",  "Guests"),
-            ("rooms",       "🛏",  "Rooms"),
-            ("bookings",    "📋",  "Bookings"),
-            ("services",    "🛎",  "Services"),
-            ("invoices",    "💳",  "Invoices"),
-            ("reports",     "📊",  "Reports"),
+        all_nav = [
+            ("dashboard", "Dashboard"),
+            ("guests",    "Guests"),
+            ("rooms",     "Rooms"),
+            ("bookings",  "Bookings"),
+            ("services",  "Services"),
+            ("invoices",  "Invoices"),
+            ("reports",   "Reports"),
         ]
+        allowed = CURRENT_USER.get("pages", [p for p, _ in all_nav])
+
         self._nav_buttons = {}
-        for page, icon, label in nav_items:
-            btn = tk.Label(self.sidebar,
-                           text=f"  {icon}   {label}",
-                           font=FONT_LABEL, anchor="w",
-                           bg=C["sidebar"], fg=C["white"],
-                           cursor="hand2", padx=8, pady=9)
+        for page, label in all_nav:
+            if page not in allowed:
+                continue
+            btn = ctk.CTkButton(self.sidebar,
+                               text=f"   {label}",
+                               font=FONT_LABEL,
+                               anchor="w",
+                               fg_color="transparent",
+                               hover_color=C["hover"],
+                               text_color=C["white"],
+                               corner_radius=8,
+                               height=36)
             btn.pack(fill="x", padx=8, pady=2)
-            btn.bind("<Button-1>", lambda e, p=page: self.navigate(p))
-            btn.bind("<Enter>", lambda e, b=btn: b.config(bg=C["hover"], fg=C["accent"]))
-            btn.bind("<Leave>", lambda e, b=btn, p=page: b.config(
-                bg=C["hover"] if self._current_page == p else C["sidebar"],
-                fg=C["accent"] if self._current_page == p else C["white"]
-            ))
+            btn.configure(command=lambda p=page: self.navigate(p))
             self._nav_buttons[page] = btn
 
         # Bottom
         make_separator(self.sidebar).pack(fill="x", padx=12, side="bottom", pady=0)
-        tk.Label(self.sidebar, text="Nguyen Phuong Linh - 1124718", font=("American Typewriter",8),
+        tk.Label(self.sidebar, text="Nguyen Phuong Linh - 1124718", font=("Arial", 8, "bold"),
                  fg=C["muted"], bg=C["sidebar"]).pack(side="bottom", pady=10)
 
     def navigate(self, page):
         # Update active button
         for p, btn in self._nav_buttons.items():
             if p == page:
-                btn.config(bg=C["hover"], fg=C["accent"])
+                btn.configure(fg_color=C["hover"], text_color=C["accent"])
             else:
-                btn.config(bg=C["sidebar"], fg=C["white"])
+                btn.configure(fg_color="transparent", text_color=C["white"])
 
         # Clear content
         for w in self.content.winfo_children():
@@ -276,11 +467,11 @@ class BasePage(tk.Frame):
         super().__init__(parent, bg=C["bg"])
         self.app = app
         self._build_header(title, subtitle)
-        self.body = tk.Frame(self, bg=C["bg"])
+        self.body = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
         self.body.pack(fill="both", expand=True, padx=24, pady=0)
 
     def _build_header(self, title, subtitle):
-        hdr = tk.Frame(self, bg=C["bg"], pady=0)
+        hdr = ctk.CTkFrame(self, fg_color=C["bg"], corner_radius=0)
         hdr.pack(fill="x", padx=24, pady=(18, 4))
         tk.Label(hdr, text=title, font=FONT_TITLE, fg=C["accent"], bg=C["bg"]).pack(anchor="w")
         if subtitle:
@@ -289,18 +480,52 @@ class BasePage(tk.Frame):
 
     def card(self, parent=None, **kw):
         p = parent or self.body
-        f = tk.Frame(p, bg=C["card"], bd=0,
-                     highlightthickness=1, highlightbackground=C["border"], **kw)
+        f = ctk.CTkFrame(p, fg_color=C["card"],
+                         border_color=C["border"],
+                         border_width=1,
+                         corner_radius=12, **kw)
         return f
 
     def stat_card(self, parent, value, label, color=None, icon=""):
-        card = tk.Frame(parent, bg=C["card"],
-                        highlightthickness=1, highlightbackground=C["border"])
-        tk.Label(card, text=icon, font=("Helvetica",22), bg=C["card"],
-                 fg=color or C["accent"]).pack(pady=(14,2))
-        tk.Label(card, text=str(value), font=("Georgia",20,"bold"),
-                 bg=C["card"], fg=color or C["accent"]).pack()
-        tk.Label(card, text=label, font=FONT_SMALL, bg=C["card"], fg=C["muted"]).pack(pady=(2,14))
+        card = ctk.CTkFrame(
+            parent,
+            fg_color=C["card"],
+            border_color=C["border"],
+            border_width=1,
+            corner_radius=14,
+            width=220,
+            height=130,
+        )
+
+        card.pack_propagate(False)
+
+        # ICON
+        icon_lbl = ctk.CTkLabel(
+            card,
+            text=icon,
+            font=("Sans-Serif", 22),
+            text_color=color or C["accent"]
+        )
+        icon_lbl.place(relx=0.5, rely=0.18, anchor="center")
+
+        # LABEL
+        label_lbl = ctk.CTkLabel(
+            card,
+            text=label,
+            font=("Sans-Serif", 10, "bold"),
+            text_color=C["muted"]
+        )
+        label_lbl.place(relx=0.5, rely=0.78, anchor="center")
+
+        # VALUE
+        value_lbl = ctk.CTkLabel(
+            card,
+            text=str(value),
+            font=("Georgia", 24, "bold"),
+            text_color=color or C["accent"]
+        )
+        value_lbl.place(relx=0.5, rely=0.48, anchor="center")
+
         return card
 
     def table(self, parent, columns, data, row_height=32):
@@ -331,8 +556,8 @@ class BasePage(tk.Frame):
             tree.heading(col, text=col)
             tree.column(col, width=120, anchor="center")
 
-        vsb = ttk.Scrollbar(frame, orient="vertical",   command=tree.yview)
-        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+        vsb = ctk.CTkScrollbar(frame, orientation="vertical",   command=tree.yview)
+        hsb = ctk.CTkScrollbar(frame, orientation="horizontal", command=tree.xview)
         tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
 
         vsb.pack(side="right", fill="y")
@@ -360,32 +585,32 @@ class BasePage(tk.Frame):
 
 class DashboardPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "🏠  Dashboard", "Welcome back — Santorini Resort Management")
+        super().__init__(parent, app, "Dashboard", "Welcome back — Santorini Resort Management")
         self._build()
 
     def _build(self):
         stats = safe_db(db.get_dashboard_stats, DEMO_STATS) if DB_AVAILABLE else DEMO_STATS
 
         # Stats row
-        stat_frame = tk.Frame(self.body, bg=C["bg"])
+        stat_frame = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         stat_frame.pack(fill="x", pady=(8,16))
         for i in range(6):
             stat_frame.columnconfigure(i, weight=1)
 
         stat_data = [
-            (stats["available"],       "Available Rooms",    C["success"], "🛏"),
-            (stats["occupied"],        "Occupied Rooms",     C["danger"],  "🔑"),
-            (stats["reserved"],        "Reservations",       C["warning"], "📋"),
-            (f"${stats['revenue']:,.0f}", "Monthly Revenue", C["accent"],  "💰"),
-            (stats["guests"],          "Total Guests",       C["accent2"], "👥"),
-            (stats["pending_invoices"],"Pending Invoices",   C["warning"], "💳"),
+            (stats["available"],       "Available Rooms",    C["success"]),
+            (stats["occupied"],        "Occupied Rooms",     C["danger"]),
+            (stats["reserved"],        "Reservations",       C["warning"]),
+            (f"${stats['revenue']:,.0f}", "Monthly Revenue", C["accent"]),
+            (stats["guests"],          "Total Guests",       C["accent2"]),
+            (stats["pending_invoices"],"Pending Invoices",   C["warning"]),
         ]
-        for i, (val, lbl, col, icon) in enumerate(stat_data):
-            card = self.stat_card(stat_frame, val, lbl, col, icon)
+        for i, (val, lbl, col) in enumerate(stat_data):
+            card = self.stat_card(stat_frame, val, lbl, col)
             card.grid(row=0, column=i, padx=6, sticky="nsew")
 
         # Two column layout
-        cols = tk.Frame(self.body, bg=C["bg"])
+        cols = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         cols.pack(fill="both", expand=True)
         cols.columnconfigure(0, weight=3)
         cols.columnconfigure(1, weight=2)
@@ -426,7 +651,7 @@ class DashboardPage(BasePage):
         for status, count, color in status_items:
             row = tk.Frame(right, bg=C["card"])
             row.pack(fill="x", padx=16, pady=6)
-            tk.Label(row, text="●", fg=color, bg=C["card"], font=("Helvetica",14)).pack(side="left")
+            tk.Label(row, text="●", fg=color, bg=C["card"], font=("Garamond",14)).pack(side="left")
             tk.Label(row, text=status, fg=C["white"], bg=C["card"], font=FONT_LABEL).pack(side="left", padx=8)
             tk.Label(row, text=str(count), fg=color, bg=C["card"], font=FONT_BOLD).pack(side="right")
 
@@ -435,8 +660,8 @@ class DashboardPage(BasePage):
                  fg=C["accent"], bg=C["card"]).pack(anchor="w", padx=16, pady=(20,6))
         make_separator(right).pack(fill="x", padx=16)
         make_button(right, "＋  New Booking",  lambda: self.app.navigate("bookings"), "primary").pack(fill="x", padx=16, pady=4)
-        make_button(right, "👤  Add Guest",    lambda: self.app.navigate("guests"),   "blue").pack(fill="x", padx=16, pady=4)
-        make_button(right, "📊  View Reports", lambda: self.app.navigate("reports"),  "ghost").pack(fill="x", padx=16, pady=(4,16))
+        make_button(right, "Add Guest",    lambda: self.app.navigate("guests"),   "blue").pack(fill="x", padx=16, pady=4)
+        make_button(right, "View Reports", lambda: self.app.navigate("reports"),  "ghost").pack(fill="x", padx=16, pady=(4,16))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -445,25 +670,25 @@ class DashboardPage(BasePage):
 
 class GuestsPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "👥  Guest Management", "Register and manage guest profiles")
+        super().__init__(parent, app, "Guest Management", "Register and manage guest profiles")
         self._selected_id = None
         self._vars = {}
         self._build()
 
     def _build(self):
         # Top toolbar
-        toolbar = tk.Frame(self.body, bg=C["bg"])
+        toolbar = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         toolbar.pack(fill="x", pady=(0, 8))
         self._search_var = tk.StringVar()
         make_entry(toolbar, textvariable=self._search_var, width=30).pack(side="left", padx=(0,8))
-        make_button(toolbar, "🔍 Search", self._search, "blue").pack(side="left", padx=4)
+        make_button(toolbar, "Search", self._search, "blue").pack(side="left", padx=4)
         make_button(toolbar, "↺ Refresh", self._load_data, "ghost").pack(side="left", padx=4)
         make_button(toolbar, "＋ Add Guest", self._show_add_form, "primary").pack(side="right")
-        make_button(toolbar, "✏ Edit",  self._show_edit_form, "ghost").pack(side="right", padx=4)
-        make_button(toolbar, "🗑 Delete", self._delete, "danger").pack(side="right", padx=4)
+        make_button(toolbar, "Edit",  self._show_edit_form, "ghost").pack(side="right", padx=4)
+        make_button(toolbar, "Delete", self._delete, "danger").pack(side="right", padx=4)
 
         # Split: table | form
-        split = tk.Frame(self.body, bg=C["bg"])
+        split = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         split.pack(fill="both", expand=True)
         split.columnconfigure(0, weight=3)
         split.columnconfigure(1, weight=2)
@@ -489,7 +714,7 @@ class GuestsPage(BasePage):
         make_separator(parent).pack(fill="x", padx=16)
 
         fields = [("Name","name"),("Phone","phone"),("Email","email"),
-                  ("Address","address"),("ID Number","id_number"),("Nationality","nationality")]
+                  ("Address","address"),("Nationality","nationality")]
         self._vars = {k: tk.StringVar() for _,k in fields}
 
         form_body = tk.Frame(parent, bg=C["card"])
@@ -499,8 +724,8 @@ class GuestsPage(BasePage):
 
         btns = tk.Frame(parent, bg=C["card"])
         btns.pack(fill="x", padx=16, pady=12)
-        make_button(btns, "💾 Save", self._save, "primary").pack(side="left", padx=4)
-        make_button(btns, "✖ Clear", self._clear_form, "ghost").pack(side="left", padx=4)
+        make_button(btns, "Save", self._save, "primary").pack(side="left", padx=4)
+        make_button(btns, "Clear", self._clear_form, "ghost").pack(side="left", padx=4)
 
     def _load_data(self):
         data = safe_db(db.get_all_guests, DEMO_GUESTS)
@@ -583,12 +808,12 @@ class GuestsPage(BasePage):
 
 class RoomsPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "🛏  Room Management", "Manage rooms, availability, and pricing")
+        super().__init__(parent, app, "Room Management", "Manage rooms, availability, and pricing")
         self._selected_id = None
         self._build()
 
     def _build(self):
-        toolbar = tk.Frame(self.body, bg=C["bg"])
+        toolbar = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         toolbar.pack(fill="x", pady=(0,8))
 
         self._filter_var = tk.StringVar(value="All")
@@ -601,7 +826,7 @@ class RoomsPage(BasePage):
         make_button(toolbar, "↺ Refresh", self._load_data, "ghost").pack(side="left", padx=8)
         make_button(toolbar, "✏ Edit Status", self._edit_status, "primary").pack(side="right")
 
-        split = tk.Frame(self.body, bg=C["bg"])
+        split = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         split.pack(fill="both", expand=True)
         split.columnconfigure(0, weight=3)
         split.columnconfigure(1, weight=2)
@@ -656,9 +881,9 @@ class RoomsPage(BasePage):
     def _edit_status(self):
         if not self._selected_id:
             messagebox.showwarning("No Selection", "Select a room first."); return
-        popup = tk.Toplevel(self)
+        popup = ctk.CTkToplevel(self)
         popup.title("Update Room Status")
-        popup.configure(bg=C["card"])
+        popup.configure(fg_color=C["card"])
         popup.geometry("300x200")
         tk.Label(popup, text="New Status:", font=FONT_BOLD, fg=C["white"],
                  bg=C["card"]).pack(pady=(20,4))
@@ -686,18 +911,18 @@ class RoomsPage(BasePage):
 
 class BookingsPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "📋  Booking Management", "Reservations, check-in, and check-out")
+        super().__init__(parent, app, "Booking Management", "Reservations, check-in, and check-out")
         self._selected_id = None
         self._build()
 
     def _build(self):
-        toolbar = tk.Frame(self.body, bg=C["bg"])
+        toolbar = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         toolbar.pack(fill="x", pady=(0,8))
         make_button(toolbar, "＋ New Booking",  self._new_booking,    "primary").pack(side="left", padx=4)
-        make_button(toolbar, "✓ Check-In",     self._checkin,         "success").pack(side="left", padx=4)
-        make_button(toolbar, "🚪 Check-Out",   self._checkout,        "blue").pack(side="left", padx=4)
-        make_button(toolbar, "✖ Cancel",       self._cancel,          "danger").pack(side="left", padx=4)
-        make_button(toolbar, "🛎 Add Service",  self._add_service,     "ghost").pack(side="left", padx=8)
+        make_button(toolbar, "Check-In",     self._checkin,         "success").pack(side="left", padx=4)
+        make_button(toolbar, "Check-Out",   self._checkout,        "blue").pack(side="left", padx=4)
+        make_button(toolbar, "Cancel",       self._cancel,          "danger").pack(side="left", padx=4)
+        make_button(toolbar, "Add Service",  self._add_service,     "ghost").pack(side="left", padx=8)
         make_button(toolbar, "↺ Refresh",      self._load_data,       "ghost").pack(side="right")
 
         card = self.card(self.body)
@@ -721,9 +946,9 @@ class BookingsPage(BasePage):
             ))
 
     def _new_booking(self):
-        popup = tk.Toplevel(self)
+        popup = ctk.CTkToplevel(self)
         popup.title("New Booking")
-        popup.configure(bg=C["card"])
+        popup.configure(fg_color=C["card"])
         popup.geometry("420x400")
 
         tk.Label(popup, text="＋  New Booking", font=FONT_HEAD,
@@ -807,9 +1032,9 @@ class BookingsPage(BasePage):
             {"ServiceID":1,"ServiceName":"Airport Transfer","Price":45.0,"Category":"Transport"},
             {"ServiceID":2,"ServiceName":"Breakfast","Price":35.0,"Category":"Food"},
         ])
-        popup = tk.Toplevel(self)
+        popup = ctk.CTkToplevel(self)
         popup.title("Add Service")
-        popup.configure(bg=C["card"])
+        popup.configure(fg_color=C["card"])
         popup.geometry("360x340")
         tk.Label(popup, text="🛎  Add Service", font=FONT_HEAD,
                  fg=C["accent"], bg=C["card"]).pack(pady=(16,8))
@@ -844,7 +1069,7 @@ class BookingsPage(BasePage):
 
 class ServicesPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "🛎  Service Management", "Hotel services and amenities")
+        super().__init__(parent, app, "Service Management", "Hotel services and amenities")
         self._build()
 
     def _build(self):
@@ -871,12 +1096,12 @@ class ServicesPage(BasePage):
 
 class InvoicesPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "💳  Invoice Management", "View and process guest payments")
+        super().__init__(parent, app, "Invoice Management", "View and process guest payments")
         self._selected_inv_id = None
         self._build()
 
     def _build(self):
-        toolbar = tk.Frame(self.body, bg=C["bg"])
+        toolbar = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         toolbar.pack(fill="x", pady=(0,8))
         make_button(toolbar, "✓ Mark as Paid", self._mark_paid, "success").pack(side="left", padx=4)
         make_button(toolbar, "↺ Refresh",      self._load_data, "ghost").pack(side="right")
@@ -920,13 +1145,13 @@ class InvoicesPage(BasePage):
 
 class ReportsPage(BasePage):
     def __init__(self, parent, app):
-        super().__init__(parent, app, "📊  Reports & Analytics", "Revenue, occupancy, and guest analytics")
+        super().__init__(parent, app, "Reports & Analytics", "Revenue, occupancy, and guest analytics")
         self._build()
 
     def _build(self):
-        tabs_frame = tk.Frame(self.body, bg=C["bg"])
+        tabs_frame = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         tabs_frame.pack(fill="x", pady=(0,8))
-        self._tab_content = tk.Frame(self.body, bg=C["bg"])
+        self._tab_content = ctk.CTkFrame(self.body, fg_color=C["bg"], corner_radius=0)
         self._tab_content.pack(fill="both", expand=True)
 
         tabs = [("Revenue",self._show_revenue),("Guest History",self._show_guests),("Occupancy",self._show_occupancy)]
@@ -949,7 +1174,7 @@ class ReportsPage(BasePage):
             {"Month":"2025-05","Revenue":8865.0,"Invoices":5},
             {"Month":"2025-04","Revenue":12350.0,"Invoices":8},
         ])
-        cols = ("Month","Revenue","# Invoices")
+        cols = ("Month","Revenue","Invoices")
         rows = [(r["Month"], f"${float(r['Revenue']):,.2f}", r["Invoices"]) for r in data]
         tbl, tree = self.table(card, cols, rows, row_height=36)
         tbl.pack(fill="both", expand=True, padx=8, pady=8)
@@ -966,7 +1191,7 @@ class ReportsPage(BasePage):
                 x = 30 + i * (bar_w + 8)
                 canvas.create_rectangle(x, 140-h, x+bar_w, 140, fill=C["accent"], outline="")
                 canvas.create_text(x+bar_w//2, 150, text=r["Month"][-5:],
-                                   font=("Helvetica",7), fill=C["muted"], anchor="n")
+                                   font=("Sans-Serif",7), fill=C["muted"], anchor="n")
 
     def _show_guests(self):
         self._clear()
